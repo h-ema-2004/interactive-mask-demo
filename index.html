@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interactive 3D LED Mask Demo</title>
+  <meta name="description" content="A premium scroll-driven 3D product website demo using Three.js and GSAP ScrollTrigger." />
+  <style>
+    :root{
+      --bg:#050505;--bg2:#0c0c0f;--text:#f6f3ee;--muted:#a7a4a0;--line:rgba(255,255,255,.13);
+      --glass:rgba(12,12,15,.58);--red:#ff4f64;--blue:#64d9ff;--violet:#a57cff;--gold:#d8c08a;
+    }
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 18% 20%,rgba(255,79,100,.22),transparent 28%),radial-gradient(circle at 80% 40%,rgba(100,217,255,.13),transparent 28%),linear-gradient(135deg,#050505,#0b0b0d 55%,#020202);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;overflow-x:hidden}
+    body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:10;opacity:.055;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+    .loader{position:fixed;inset:0;z-index:20;display:grid;place-items:center;align-content:center;gap:16px;background:#050505;transition:.55s ease}.loader.hidden{opacity:0;visibility:hidden}.ring{width:52px;height:52px;border-radius:999px;border:1px solid rgba(255,255,255,.25);border-top-color:var(--red);animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loader p{margin:0;color:var(--muted);font-size:14px}
+    #webgl{position:fixed;inset:0;width:100vw;height:100vh;z-index:1;display:block;opacity:0;transition:opacity .7s ease;pointer-events:none}body.ready #webgl{opacity:1}
+    .site{position:relative;z-index:2}.nav{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:6;width:min(94vw,980px);display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid var(--line);border-radius:999px;background:rgba(5,5,5,.56);backdrop-filter:blur(18px)}.brand{display:flex;gap:10px;align-items:center;font-weight:800;letter-spacing:.04em}.mark{width:28px;height:28px;border-radius:50%;background:radial-gradient(circle,var(--red),#61131d 65%,#151515);box-shadow:0 0 28px rgba(255,79,100,.4)}.nav span:last-child{color:var(--muted);font-size:13px}
+    .section{min-height:100vh;display:grid;align-items:center;padding:120px min(8vw,92px)}.content{width:min(560px,92vw);padding:26px;border:1px solid var(--line);border-radius:30px;background:var(--glass);backdrop-filter:blur(18px);box-shadow:0 24px 80px rgba(0,0,0,.33)}.content.left{margin-right:auto}.content.right{margin-left:auto}.eyebrow{display:inline-flex;gap:8px;align-items:center;margin-bottom:16px;padding:8px 12px;border:1px solid rgba(255,255,255,.14);border-radius:999px;color:#e8dfd2;font-size:13px;background:rgba(255,255,255,.04)}.dot{width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 18px var(--red)}h1,h2{margin:0 0 16px;line-height:.96;letter-spacing:-.06em}h1{font-size:clamp(46px,8.5vw,116px);max-width:860px;text-wrap:balance}h2{font-size:clamp(34px,5vw,74px)}p{margin:0;color:var(--muted);font-size:clamp(16px,2vw,20px);line-height:1.9}.hero{min-height:118vh;align-items:end;padding-bottom:10vh}.hero .content{width:min(900px,94vw);background:linear-gradient(180deg,rgba(20,20,23,.5),rgba(8,8,9,.68))}.cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}.btn{border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:13px 18px;text-decoration:none;color:var(--text);font-weight:700;background:rgba(255,255,255,.06)}.btn.primary{border-color:rgba(255,79,100,.45);background:linear-gradient(135deg,rgba(255,79,100,.9),rgba(165,124,255,.75));box-shadow:0 0 36px rgba(255,79,100,.24)}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:22px}.stat{padding:14px;border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.035)}.stat strong{display:block;font-size:22px}.stat small{color:var(--muted)}
+    .footer{min-height:85vh;display:grid;place-items:center;text-align:center;padding:90px 22px}.footer h2{max-width:850px}.footer p{max-width:680px}.progress{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:7;display:flex;flex-direction:column;gap:8px}.progress i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.24);transition:.25s}.progress i.active{height:24px;background:var(--red);box-shadow:0 0 18px rgba(255,79,100,.65)}
+    .floating{position:fixed;right:18px;bottom:18px;z-index:7;max-width:290px;padding:12px 14px;border-radius:20px;background:rgba(5,5,5,.66);border:1px solid var(--line);color:var(--muted);font-size:12px;backdrop-filter:blur(16px)}
+    @media(max-width:760px){.nav{top:10px;width:calc(100vw - 20px)}.nav span:last-child{display:none}.section{padding:110px 18px}.content,.content.left,.content.right{margin:0 auto;width:100%;padding:20px;border-radius:24px}.hero{align-items:end;padding-bottom:40px}.stats{grid-template-columns:1fr}.progress{display:none}.floating{left:12px;right:12px;bottom:10px;max-width:none}.content p{font-size:15px;line-height:1.75}}
+  </style>
+</head>
+<body>
+  <div class="loader"><div class="ring"></div><p>جاري تجهيز تجربة المنتج ثلاثية الأبعاد...</p></div>
+  <canvas id="webgl"></canvas>
+  <nav class="nav"><span class="brand"><i class="mark"></i> Elaré-style 3D Demo</span><span>Three.js + GSAP ScrollTrigger</span></nav>
+  <div class="progress"><i class="active"></i><i></i><i></i><i></i><i></i></div>
+  <main class="site">
+    <section class="section hero" data-scene="0"><div class="content"><span class="eyebrow"><b class="dot"></b> تجربة منتج تفاعلية</span><h1>Premium LED Therapy Mask</h1><p>صفحة تجريبية فاخرة تستخدم WebGL لعرض منتج 3D، و GSAP لربط حركة الماسك والكاميرا بالسكرول مثل مواقع المنتجات العالمية.</p><div class="cta-row"><a class="btn primary" href="#tech">استكشف التقنية</a><a class="btn" href="#final">شاهد العرض النهائي</a></div><div class="stats"><div class="stat"><strong>3D</strong><small>مشهد WebGL حي</small></div><div class="stat"><strong>Scroll</strong><small>حركة حسب النزول</small></div><div class="stat"><strong>Mobile</strong><small>متجاوب للجوال</small></div></div></div></section>
+    <section class="section" data-scene="1"><div class="content right"><span class="eyebrow"><b class="dot"></b> Material Focus</span><h2>خامة سيليكون ناعمة بإضاءة Studio</h2><p>مع السكرول تتحرك الكاميرا قرب المنتج لإظهار الخامة، الحواف، ونقاط الإضاءة. في النسخة الحقيقية نستبدل المجسم البرمجي بملف GLB محسّن.</p></div></section>
+    <section class="section" id="tech" data-scene="2"><div class="content left"><span class="eyebrow"><b class="dot"></b> LED Technology</span><h2>تغيير ألوان الضوء حسب الميزة</h2><p>تتغير نقاط LED بين الأحمر، الأزرق، والبنفسجي. يمكن ربط كل لون بفائدة تسويقية أو قسم محتوى مستقل داخل الصفحة.</p></div></section>
+    <section class="section" data-scene="3"><div class="content right"><span class="eyebrow"><b class="dot"></b> Exploded View</span><h2>تفكيك طبقات المنتج بصريًا</h2><p>في مشروع حقيقي يتم تقسيم أجزاء الماسك في Blender: الجسم، طبقة السيليكون، لوحة LED، الأحزمة، ثم تحريك كل جزء على ScrollTrigger.</p></div></section>
+    <section class="section" data-scene="4"><div class="content left"><span class="eyebrow"><b class="dot"></b> Performance</span><h2>Canvas واحد وأداء مضبوط</h2><p>التصميم يعتمد على Canvas ثابت، Pixel Ratio منخفض على الجوال، وعدد Meshes محدود. هذا يحافظ على تجربة سلسة حتى على الأجهزة المتوسطة.</p></div></section>
+    <section class="footer" id="final" data-scene="5"><div><h2>جاهز للتطوير إلى Website حقيقي</h2><p>الخطوة التالية: تصميم موديل GLB حقيقي للماسك، ضغطه، ثم ربط أجزائه بنفس الـ timeline الموجود هنا.</p><div class="cta-row" style="justify-content:center"><a class="btn primary" href="#">Back to top</a></div></div></section>
+  </main>
+  <div class="floating">ملاحظة: هذه نسخة Demo تعمل من ملف واحد. تحتاج إنترنت لأنها تستورد Three.js و GSAP من CDN.</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <script type="module">
+    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+
+    const canvas = document.getElementById('webgl');
+    const isMobile = innerWidth < 760 || navigator.hardwareConcurrency <= 4;
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x050505, 7, 15);
+    const camera = new THREE.PerspectiveCamera(isMobile ? 42 : 35, innerWidth / innerHeight, .1, 100);
+    camera.position.set(0, .05, isMobile ? 7.2 : 6.2);
+
+    const renderer = new THREE.WebGLRenderer({canvas, antialias: !isMobile, alpha: true, powerPreference:'high-performance'});
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, isMobile ? 1.25 : 1.8));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+
+    const group = new THREE.Group();
+    scene.add(group);
+
+    const shellMat = new THREE.MeshPhysicalMaterial({color:0x141416, roughness:.38, metalness:.08, clearcoat:.55, clearcoatRoughness:.25, emissive:0x120608, emissiveIntensity:.18});
+    const trimMat = new THREE.MeshStandardMaterial({color:0x29292d, roughness:.32, metalness:.2});
+    const darkMat = new THREE.MeshBasicMaterial({color:0x020203});
+    const strapMat = new THREE.MeshStandardMaterial({color:0x0b0b0d, roughness:.55, metalness:.05});
+
+    const shell = new THREE.Mesh(new THREE.SphereGeometry(1.72, isMobile?48:72, isMobile?24:36), shellMat);
+    shell.scale.set(1.05,.68,.135);
+    group.add(shell);
+
+    const trim = new THREE.Mesh(new THREE.TorusGeometry(1.22,.035,isMobile?10:16,isMobile?80:130), trimMat);
+    trim.scale.set(1.36,.78,.08); trim.position.z=.055;
+    group.add(trim);
+
+    function ellipse(x,y,sx,sy){const e=new THREE.Mesh(new THREE.CircleGeometry(.22,48),darkMat);e.scale.set(sx,sy,1);e.position.set(x,y,.21);return e;}
+    group.add(ellipse(-.57,.14,1.45,.62));
+    group.add(ellipse(.57,.14,1.45,.62));
+
+    const mouth = new THREE.Mesh(new THREE.TorusGeometry(.34,.012,8,70,Math.PI), darkMat);
+    mouth.position.set(0,-.33,.215); mouth.rotation.z=Math.PI; mouth.scale.y=.42; group.add(mouth);
+
+    const strap1 = new THREE.Mesh(new THREE.TorusGeometry(1.75,.028,10,96,Math.PI*.92), strapMat);
+    strap1.position.set(0,.02,-.12); strap1.rotation.z=Math.PI*.04; strap1.scale.y=.57; group.add(strap1);
+    const strap2 = strap1.clone(); strap2.rotation.z=Math.PI*1.04; group.add(strap2);
+
+    const leds = [];
+    const ledMat = new THREE.MeshStandardMaterial({color:0xff5267, emissive:0xff304b, emissiveIntensity:2.4, roughness:.18});
+    const ledGeo = new THREE.SphereGeometry(.028,16,12);
+    const rows = isMobile ? 5 : 7;
+    const cols = isMobile ? 9 : 13;
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        const x=(c-(cols-1)/2)*.18; const y=.46-r*.15;
+        const inFace = Math.pow(x/1.32,2)+Math.pow(y/.76,2)<1;
+        const eyeL = Math.pow((x+.57)/.31,2)+Math.pow((y-.14)/.14,2)<1;
+        const eyeR = Math.pow((x-.57)/.31,2)+Math.pow((y-.14)/.14,2)<1;
+        if(inFace && !eyeL && !eyeR){const led=new THREE.Mesh(ledGeo,ledMat.clone());led.position.set(x,y,.25);leds.push(led);group.add(led)}
+      }
+    }
+
+    scene.add(new THREE.AmbientLight(0xffffff,.75));
+    const key = new THREE.DirectionalLight(0xffffff,2.6); key.position.set(3,4,5); scene.add(key);
+    const rim = new THREE.DirectionalLight(0x8fdcff,1.35); rim.position.set(-4,1,-4); scene.add(rim);
+    const red = new THREE.PointLight(0xff304b,3.2,8); red.position.set(-2,.6,2.4); scene.add(red);
+    const blue = new THREE.PointLight(0x64d9ff,2.2,7); blue.position.set(2,-.3,2.2); scene.add(blue);
+
+    const particles = new THREE.Group(); scene.add(particles);
+    const pGeo = new THREE.SphereGeometry(.008,8,8); const pMat = new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.35});
+    for(let i=0;i<(isMobile?45:90);i++){const p=new THREE.Mesh(pGeo,pMat);p.position.set((Math.random()-.5)*8,(Math.random()-.5)*5,(Math.random()-.5)*5-1);particles.add(p)}
+
+    const scenes = [
+      {gx:0,gy:0,gz:0,rx:-.08,ry:-.15,rz:0,cz:isMobile?7.2:6.2,led:0xff5267},
+      {gx:isMobile?0:.8,gy:.05,gz:.25,rx:-.12,ry:.75,rz:-.04,cz:4.8,led:0xff5267},
+      {gx:isMobile?0:-.75,gy:0,gz:.15,rx:.05,ry:-.92,rz:.05,cz:4.3,led:0x64d9ff},
+      {gx:0,gy:.03,gz:.55,rx:.18,ry:1.75,rz:0,cz:3.9,led:0xa57cff},
+      {gx:isMobile?0:.75,gy:-.03,gz:.05,rx:-.1,ry:2.65,rz:.03,cz:4.8,led:0xff5267},
+      {gx:0,gy:0,gz:0,rx:-.05,ry:Math.PI*2,rz:0,cz:5.5,led:0xff5267}
+    ];
+
+    gsap.registerPlugin(ScrollTrigger);
+    const dots = [...document.querySelectorAll('.progress i')];
+    document.querySelectorAll('[data-scene]').forEach((el,idx)=>{
+      ScrollTrigger.create({trigger:el,start:'top center',end:'bottom center',onEnter:()=>go(idx),onEnterBack:()=>go(idx)});
+    });
+    function go(i){
+      const s=scenes[i]; dots.forEach((d,n)=>d.classList.toggle('active',n===Math.min(i,dots.length-1)));
+      gsap.to(group.position,{x:s.gx,y:s.gy,z:s.gz,duration:1.15,ease:'power3.out'});
+      gsap.to(group.rotation,{x:s.rx,y:s.ry,z:s.rz,duration:1.25,ease:'power3.out'});
+      gsap.to(camera.position,{z:s.cz,duration:1.15,ease:'power3.out'});
+      leds.forEach((led,k)=>{gsap.to(led.material.color,{r:((s.led>>16)&255)/255,g:((s.led>>8)&255)/255,b:(s.led&255)/255,duration:.8});gsap.to(led.material.emissive,{r:((s.led>>16)&255)/255,g:((s.led>>8)&255)/255,b:(s.led&255)/255,duration:.8});gsap.to(led.scale,{x:i===2||i===3?1.45:1,y:i===2||i===3?1.45:1,z:i===2||i===3?1.45:1,duration:.8,delay:(k%8)*.01})});
+      if(i===3){gsap.to(shell.position,{z:-.18,duration:1.1});gsap.to(trim.position,{z:.33,duration:1.1});gsap.to(strap1.position,{z:-.5,duration:1.1});gsap.to(strap2.position,{z:-.5,duration:1.1})} else {gsap.to(shell.position,{z:0,duration:1.1});gsap.to(trim.position,{z:.055,duration:1.1});gsap.to(strap1.position,{z:-.12,duration:1.1});gsap.to(strap2.position,{z:-.12,duration:1.1})}
+    }
+    gsap.from('.hero .content',{opacity:0,y:60,duration:1,ease:'power3.out',delay:.35});
+    gsap.utils.toArray('.content').forEach(card=>gsap.from(card,{opacity:0,y:50,duration:.9,ease:'power3.out',scrollTrigger:{trigger:card,start:'top 78%'}}));
+
+    let mx=0,my=0; addEventListener('pointermove',e=>{mx=(e.clientX/innerWidth-.5);my=(e.clientY/innerHeight-.5)});
+    function render(t){
+      group.rotation.y += .0025;
+      group.position.x += (mx*(isMobile?.08:.18)-group.position.x)*.018;
+      group.position.y += (-my*(isMobile?.05:.12)-group.position.y)*.018;
+      particles.rotation.y += .0007;
+      leds.forEach((l,i)=>{const pulse=1+Math.sin(t*.003+i)*.18;l.material.emissiveIntensity=1.5+pulse*1.2});
+      renderer.render(scene,camera); requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+    addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,(innerWidth<760?1.25:1.8)))});
+    setTimeout(()=>{document.body.classList.add('ready');document.querySelector('.loader').classList.add('hidden');go(0)},450);
+  </script>
+</body>
+</html>
